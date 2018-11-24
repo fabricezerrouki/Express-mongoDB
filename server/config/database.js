@@ -7,7 +7,7 @@ const db = process.env.MONGODB_DB || 'project';
 // Construct the URI from different parts
 const mongodb_uri = 'mongodb://' + host + ':' + port + '/' + db;
 
-mongoose.connect(mongodb_uri, options, error => {
+mongoose.connect(mongodb_uri, error => {
   if (error) {
     console.error(`Failed to connect to mongodb\n\n\n${error}`);
     process.exit(1);

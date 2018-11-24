@@ -7,6 +7,8 @@ const cookieParser = require('cookie-parser');
 const Config = require('./config/config');
 const database = require('./config/database');
 
+const apis = require('./routes/routes')
+
 const app = express();
 
 // app.all('*', function(req, res, next) {
@@ -25,7 +27,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-// app.use('/', apis);
+app.use('/', apis);
 
 var port = process.env.PORT || 8000; // set our port
 
@@ -35,10 +37,3 @@ const server = app.listen(port, () => {
 
    console.log("😀 app listening at http://%s:%s", host, port)
 })
-
-
-// // .env
-// PORT=8080
-// NODE_ENV=development
-// MONGODB_URI=mongodb://localhost:27017/project
-// JWT_SECRET=
