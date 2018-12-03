@@ -1,6 +1,5 @@
-var mongoose = require('mongoose');
-const mongodb = require('mongodb');
-var Schema = mongoose.Schema;
+var mongoose = require('mongoose')
+var Schema = mongoose.Schema
 
 // create a schema
 var commentSchema = new Schema({
@@ -18,10 +17,10 @@ var commentSchema = new Schema({
   status: { type: Boolean, default: true },
   isActive: { type: Boolean, default: false },
 }, {
-    // Automatically include createdAt and updatedAt field
-    timestamps: true
-  });
+  // Automatically include createdAt and updatedAt field
+  timestamps: true
+})
 
-var Comment = mongoose.model('Comment', commentSchema);
+var Comment = mongoose.model('Comment', commentSchema)
 
-module.exports = Comment;
+module.exports = Comment
