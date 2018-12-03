@@ -16,7 +16,7 @@ var baseUrl = '/api/v1';
 // router.post(baseUrl + '/users', TodoController.user_create_post)
 
 /*  PostController */
-const PostController = require('../controller/PostController')
+const PostController = require('../controllers/PostController')
 router.get(baseUrl + '/posts', PostController.post_list)
 router.post(baseUrl + '/posts', PostController.create_post)
 

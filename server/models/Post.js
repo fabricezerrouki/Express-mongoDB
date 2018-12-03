@@ -5,14 +5,20 @@ var Schema = mongoose.Schema;
 // create a schema
 var postSchema = new Schema({
   title: { type: String , default: '' },
+  userId: { type: Schema.ObjectId, ref: 'Users' },
   body: { type: String, default: '' },
   postImages: {
+    type: Array,
+    default: []
+  },
+  likes: {
     type: Array,
     default: []
   },
   status: { type: Boolean, default: true },
   isActive: { type: Boolean, default: false },
 }, {
+    // Automatically include createdAt and updatedAt field
     timestamps: true
   });
 

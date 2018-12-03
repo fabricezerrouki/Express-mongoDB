@@ -3,7 +3,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 
-
 const Config = require('./config/config');
 const database = require('./config/database');
 
@@ -23,9 +22,10 @@ const app = express();
 //   next();
 // });
 
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+
 
 app.use('/', apis);
 
