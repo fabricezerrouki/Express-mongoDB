@@ -1,52 +1,52 @@
-const Validator = require('validator');
-const isEmpty = require('./is_empty');
+const Validator = require('validator')
+const isEmpty = require('./is_empty')
 
 module.exports = function validateRegisterInput(data) {
-  let errors = {};
-  data.name = !isEmpty(data.name) ? data.name : '';
-  data.email = !isEmpty(data.email) ? data.email : '';
-  data.password = !isEmpty(data.password) ? data.password : '';
-  data.password_confirm = !isEmpty(data.password_confirm) ? data.password_confirm : '';
-  data.contact = !isEmpty(data.contact) ? data.contact : '';
+  let errors = {}
+  data.name = !isEmpty(data.name) ? data.name : ''
+  data.email = !isEmpty(data.email) ? data.email : ''
+  data.password = !isEmpty(data.password) ? data.password : ''
+  data.password_confirm = !isEmpty(data.password_confirm) ? data.password_confirm : ''
+  data.contact = !isEmpty(data.contact) ? data.contact : ''
 
   if (!Validator.isLength(data.name, { min: 2, max: 30 })) {
-    errors.name = 'Name must be between 2 to 30 chars';
+    errors.name = 'Name must be between 2 to 30 chars'
   }
 
   if (Validator.isEmpty(data.name)) {
-    errors.name = 'Name field is required';
+    errors.name = 'Name field is required'
   }
 
   if (!Validator.isEmail(data.email)) {
-    errors.email = 'Email is invalid';
+    errors.email = 'Email is invalid'
   }
 
   if (Validator.isEmpty(data.email)) {
-    errors.email = 'Email is required';
+    errors.email = 'Email is required'
   }
 
   if (Validator.isEmpty(data.contact)) {
-    errors.contact = 'Phone Number is required';
+    errors.contact = 'Phone Number is required'
   }
 
   if (!Validator.isLength(data.password, { min: 6, max: 30 })) {
-    errors.password = 'Password must have 6 chars';
+    errors.password = 'Password must have 6 chars'
   }
 
   if (Validator.isEmpty(data.password)) {
-    errors.password = 'Password is required';
+    errors.password = 'Password is required'
   }
 
   if (!Validator.isLength(data.password_confirm, { min: 6, max: 30 })) {
-    errors.password_confirm = 'Password must have 6 chars';
+    errors.password_confirm = 'Password must have 6 chars'
   }
 
   if (!Validator.equals(data.password, data.password_confirm)) {
-    errors.password_confirm = 'Password and Confirm Password must match';
+    errors.password_confirm = 'Password and Confirm Password must match'
   }
 
   if (Validator.isEmpty(data.password_confirm)) {
-    errors.password_confirm = 'Confirmation Password is required';
+    errors.password_confirm = 'Confirmation Password is required'
   }
 
   return {

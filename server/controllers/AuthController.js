@@ -1,78 +1,90 @@
-const express = require('express');
+const express = require('express')
 var app = express()
       
 var bodyParser = require('body-parser')
-const gravatar = require('gravatar');
-const bcrypt = require('bcrypt-nodejs');
-const jwt = require('jsonwebtoken');
+const gravatar = require('gravatar')
+const bcrypt = require('bcrypt-nodejs')
+const jwt = require('jsonwebtoken')
 
-const User = require('../models/User');
+const User = require('../models/User')
 const config = require('../config/database')
+const SentryService = require('../services/sentryService')
 
 const validateRegisterInput = require('./validations/register_validation')
 const validateLoginInput = require('./validations/login_validation')
+
+const SentryServices = new SentryService()
 
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
 exports.user_registration = function (req, res) {
-  const { errors, isValid } = validateRegisterInput(req.body);
+  const { errors, isValid } = validateRegisterInput(req.body)
   if (!isValid) {
-    return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': errors });
+    return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': errors })
   }
-  User.findOne({
-    email: req.body.email
-  }).then(user => {
-    if (user) {
-      return res.status(400).json({
-        email: 'Email already exists'
-      });
-    }
-    else {
-      const avatar = gravatar.url(req.body.email, { s: '200', r: 'pg', d: 'mm' });
-      const newUser = new User({
-        name: req.body.name,
-        email: req.body.email,
-        password: req.body.password,
-        role: 'User',
-        profilePicture: avatar,
-        phoneNumber: req.body.contact
-      });
+  try {
+    User.findOne({
+      email: req.body.email
+    }).then(user => {
+      if (user) {
+        return res.status(400).json({
+          email: 'Email already exists'
+        })
+      }
+      else {
+        const avatar = gravatar.url(req.body.email, { s: '200', r: 'pg', d: 'mm' })
+        const newUser = new User({
+          name: req.body.name,
+          email: req.body.email,
+          password: req.body.password,
+          role: 'User',
+          profilePicture: avatar,
+          phoneNumber: req.body.contact
+        })
 
-      bcrypt.genSalt(10, (err, salt) => {
-        if (err) return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': err });
-        else {
-          bcrypt.hash(newUser.password, salt, (err, hash) => {
-            if (err) return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': err });
-            else {
-              newUser.password = hash;
-              newUser
-                .save()
-                .then(user => {
-                  res.status(200).json({ 'response_code': 200, 'message': 'success', 'user': { 'email': user.email, 'id': user._id, 'name': user.name } })
-                });
-            }
-          });
-        }
-      });
-    }
-  });
-};
+        bcrypt.genSalt(10, (err, salt) => {
+          if (err) return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': err })
+          else {
+            bcrypt.hash(newUser.password, salt, (err, hash) => {
+              if (err) return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': err })
+              else {
+                newUser.password = hash
+                newUser
+                  .save()
+                  .then(user => {
+                    res.status(200).json({ 'response_code': 200, 'message': 'success', 'user': { 'email': user.email, 'id': user._id, 'name': user.name } })
+                  })
+              }
+            })
+          }
+        })
+      }
+    })
+  } catch (error) {
+    SentryServices.sendException(error)
+    return reply({
+      status: false,
+      message: error.message,
+      data: ''
+    })
+  }
+}
 
 exports.user_login = function (req, res) {
-  const { errors, isValid } = validateLoginInput(req.body);
+  const { errors, isValid } = validateLoginInput(req.body)
   if (!isValid) {
-    return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': errors });
+    return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': errors })
   }
 
-  const email = req.body.email;
-  const password = req.body.password;
+  const email = req.body.email
+  const password = req.body.password
   // const status = true;
   User.findOne({ email })
     .then(user => {
       if (!user) {
         errors.email = 'Invalid Credentials. Please Check your email Id'
-        return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': errors });
+        return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': errors })
       }
       bcrypt.compare(password, user.password)
         .then(isMatch => {
@@ -86,23 +98,23 @@ exports.user_login = function (req, res) {
               expiresIn: 3600
             }, (err, token) => {
               if (err) {
-                return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': err });
+                return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': err })
               } else {
                 res.status(200).json({
                   'response_code': 200,
                   'message': 'success',
                   'success': true,
                   'token': `${token}`
-                });
+                })
               }
-            });
+            })
           }
           else {
-            errors.password = 'Incorrect Password';
-            return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': errors });
+            errors.password = 'Incorrect Password'
+            return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': errors })
           }
-        });
-    });
+        })
+    })
 }
 
 // exports.user_authentication = function (req, res) {
