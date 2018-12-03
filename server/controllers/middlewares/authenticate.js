@@ -2,10 +2,10 @@ var jwt = require('jsonwebtoken')
 var Config = require('../../config/config')
 
 module.exports = (req, res, next) => {
-  const access_token = req.body.access_token//req.cookies.access_token;
+  const access_token = req.headers['access_token'] || req.body.access_token//req.cookies.access_token;
   if (access_token) {
     try {
-      req.decoded = jwt.verify(access_token, Config.config().token.secret)
+      req.decoded = jwt.verify(access_token, process.env.JWT_SECRET) // Config.config().token.secret
       next()
     } catch (err) {
       res

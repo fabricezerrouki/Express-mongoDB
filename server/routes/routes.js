@@ -21,12 +21,12 @@ var baseUrl = '/api/v1'
 // router.post(baseUrl + '/posts', PostController.create_post)
 
 /* Authentication */
-// var authenticate = require('../controllers/middlewares/authenticate')
-var AuthController = require('./../controllers/AuthController')
+// const authenticate = require('../controllers/middlewares/authenticate')
+const AuthController = require('./../controllers/AuthController')
 
 router.post(baseUrl + '/login', AuthController.user_login)
 router.post(baseUrl + '/register', AuthController.user_registration)
-// router.post(baseUrl + '/auth', authenticate, AuthController.authenticateUser);
-// router.post(baseUrl + '/logout',   AuthController.logoutUser);
+router.post(baseUrl + '/auth', AuthController.user_authentication)
+router.post(baseUrl + '/logout',   AuthController.user_logout)
 
 module.exports = router

@@ -1,22 +1,15 @@
-const express = require('express')
 const bcrypt = require('bcrypt-nodejs')
 const jwt = require('jsonwebtoken')
-const bodyParser = require('body-parser')
-var gravatar = require('gravatar')
-
-var app = express()
+const gravatar = require('gravatar')
 
 const User = require('../models/User')
-const config = require('../config/database')
+// const config = require('../config/database')
 const SentryService = require('../services/sentryService')
 
 const validateRegisterInput = require('./validations/register_validation')
 const validateLoginInput = require('./validations/login_validation')
 
 const SentryServices = new SentryService()
-
-app.use(bodyParser.urlencoded({ extended: false }))
-app.use(bodyParser.json())
 
 exports.user_registration = function (req, res) {
   const { errors, isValid } = validateRegisterInput(req.body)
@@ -43,20 +36,14 @@ exports.user_registration = function (req, res) {
           phoneNumber: req.body.contact
         })
 
-        bcrypt.genSalt(10, (err, salt) => {
+        bcrypt.hash(newUser.password, null, null, function (err, hash) {
           if (err) return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': err })
           else {
-            bcrypt.hash(newUser.password, salt, (err, hash) => {
-              if (err) return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': err })
-              else {
-                newUser.password = hash
-                newUser
-                  .save()
-                  .then(user => {
-                    res.status(200).json({ 'response_code': 200, 'message': 'success', 'user': { 'email': user.email, 'id': user._id, 'name': user.name } })
-                  })
-              }
-            })
+            newUser.password = hash
+            newUser.save()
+              .then(user => {
+                res.status(200).json({ 'response_code': 200, 'message': 'success', 'user': { 'email': user.email, 'id': user._id, 'name': user.name } })
+              })
           }
         })
       }
@@ -76,52 +63,49 @@ exports.user_login = function (req, res) {
   if (!isValid) {
     return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': errors })
   }
-
   const email = req.body.email
   const password = req.body.password
-  // const status = true;
   User.findOne({ email })
     .then(user => {
       if (!user) {
         errors.email = 'Invalid Credentials. Please Check your email Id'
         return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': errors })
       }
-      bcrypt.compare(password, user.password)
-        .then(isMatch => {
-          if (isMatch) {
-            const payload = {
-              id: user.id,
-              name: user.name,
-              avatar: user.avatar
+      bcrypt.compare(password, user.password, function (error, isMatch) {
+        if (isMatch) {
+          const payload = {
+            id: user.id,
+            name: user.name,
+            avatar: user.avatar
+          }
+          jwt.sign(payload, process.env.JWT_SECRET, {
+            expiresIn: 3600
+          }, (err, token) => {
+            if (err) {
+              return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': err })
+            } else {
+              res.status(200).json({
+                'response_code': 200,
+                'message': 'success',
+                'success': true,
+                'token': `${token}`
+              })
             }
-            jwt.sign(payload, config.secret, {
-              expiresIn: 3600
-            }, (err, token) => {
-              if (err) {
-                return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': err })
-              } else {
-                res.status(200).json({
-                  'response_code': 200,
-                  'message': 'success',
-                  'success': true,
-                  'token': `${token}`
-                })
-              }
-            })
-          }
-          else {
-            errors.password = 'Incorrect Password'
-            return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': errors })
-          }
-        })
+          })
+        }
+        else {
+          errors.password = 'Incorrect Password'
+          return res.status(400).json({ 'response_code': 400, 'message': 'error', 'errors': errors })
+        }
+      })
     })
 }
 
 exports.user_authentication = function (req, res) {
-  var token = req.headers['x-access-token'] // || req.body.x-access-token || req.query.x-access-token
+  var token = req.headers['access_token']  // || req.body.access_token || req.query.access_token
   if (!token) return res.status(200).json({ 'response_code': 400, 'message': 'error', 'auth': false, 'result': 'No token provided.' })
 
-  jwt.verify(token, config.secret, function (err, decoded) {
+  jwt.verify(token, process.env.JWT_SECRET, function (err, decoded) {
     if (err) return res.status(500).send({ auth: false, message: 'Failed to authenticate token.' })
 
     User.findById(decoded.id, { name: 1, email: 1 }, function (err, user) {
